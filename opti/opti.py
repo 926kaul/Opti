@@ -16,7 +16,7 @@ wn = data['RIDERS'][1][6]
 cn = data['RIDERS'][2][6]
 n = wn + bn + cn
 
-def tsp(px,rider_id):
+def tsp(px,rider_id): #algorithm for choosing order of pickup and pickdown (temporary just sort by order id)
     pickup = []
     pickdown = []
     for j in range(k):
@@ -38,12 +38,12 @@ try:
         m.addConstr(constr==1)
 
     for i in range(n): # sum of ORDERS volume is less than rider capacity
-        if i < wn: #walk rider
-            mode = 0
-        elif i < wn+bn: #bike rider
-            mode = 1
-        else: #car rider
-            mode = 2
+        if i < wn: 
+            mode = 0 #walk rider
+        elif i < wn+bn: 
+            mode = 1 #bike rider
+        else: 
+            mode = 2 #car rider
         constr = gp.LinExpr()
         for j in range(k):
             constr += data['ORDERS'][j][7]*x[i,j]
@@ -51,29 +51,29 @@ try:
     
     total_cost = gp.LinExpr()
     for i in range(n):
-        if i < wn: #walk rider
-            r = 0
-        elif i < wn+bn: #bike rider
-            r = 1
-        else: #car rider
-            r = 2
+        if i < wn: 
+            r = 0 #walk rider
+        elif i < wn+bn: 
+            r = 1 #bike rider
+        else: 
+            r = 2 #car rider
         distance = gp.LinExpr()
         pickup_time = gp.LinExpr()
         up, down = tsp(x, i)
-        if not up: # case that this rider don't get any ORDERS
+        if not up: # case that this rider don't get any order
             continue
-        pickup_time += data['ORDERS'][up[0]][1] #prepare time of first pickup (ORDERS start + ready)
+        pickup_time += data['ORDERS'][up[0]][1] #prepare time of first pickup (order start + ready)
         pickup_time += data['ORDERS'][up[0]][6] 
         for loc in range(len(up)-1):
             pickup_time += data['DIST'][up[loc]][up[loc+1]]//wbc[mode]['spd'] + wbc[mode]['svt'] #time spent for pick ups
             distance += data['DIST'][up[loc]][up[loc+1]]
         pickup_time += data['DIST'][up[len(up)-1]][down[0]]//wbc[mode]['spd'] + wbc[mode]['svt'] 
         distance += data['DIST'][up[len(up)-1]][down[0]]
-        m.addConstr(pickup_time <= data['ORDERS'][down[0]][8]) #time should be earlier than dead line of first ORDERS
+        m.addConstr(pickup_time <= data['ORDERS'][down[0]][8]) #time should be earlier than dead line of first order
         for loc in range(1,len(down)):
             pickup_time += data['DIST'][down[loc-1]][down[loc]]//wbc[mode]['spd'] + wbc[mode]['svt']
             distance += data['DIST'][down[loc-1]][down[loc]]
-            m.addConstr(pickup_time <= data['ORDERS'][down[loc]][8])
+            m.addConstr(pickup_time <= data['ORDERS'][down[loc]][8]) #time should be earlier than dead line of orders
         total_cost += distance * wbc[mode]['vrc']
         total_cost += wbc[mode]['fxc']
 
